@@ -399,6 +399,12 @@ impl ScalarRepr {
     }
 }
 
+impl Scalar {
+    pub const fn new(raw: [u64; 4]) -> Self {
+        Scalar(blst_fr { l: raw })
+    }
+}
+
 impl fff::PrimeField for Scalar {
     type Repr = ScalarRepr;
 
