@@ -203,6 +203,11 @@ impl Fp12 {
         Fp12(out)
     }
 
+    #[inline]
+    pub fn cyclotomic_square(&mut self) {
+        unsafe { blst_fp12_cyclotomic_sqr(&mut self.0, &self.0) };
+    }
+
     pub fn c0(&self) -> Fp6 {
         self.0.fp6[0].into()
     }
