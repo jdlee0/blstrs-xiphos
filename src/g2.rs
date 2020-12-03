@@ -293,11 +293,13 @@ impl G2Affine {
         on_curve || self.is_zero()
     }
 
-    pub fn from_raw_unchecked(x: Fp2, y: Fp2, _infinity: bool) -> Self {
-        let mut raw = blst_p2_affine::default();
-        raw.x = x.0;
-        raw.y = y.0;
-        // FIXME: what about infinity?
+    pub fn from_raw_unchecked(x: Fp2, y: Fp2, infinity: bool) -> Self {
+        // blst stores points at infinity as (0,0) in affine coordinates.
+        let raw = if infinity {
+            blst_p2_affine::default()
+        } else {
+            blst_p2_affine {x: x.0, y: y.0}
+        };
 
         G2Affine(raw)
     }
@@ -539,10 +541,7 @@ impl G2Projective {
     }
 
     pub fn from_raw_unchecked(x: Fp2, y: Fp2, z: Fp2) -> Self {
-        let mut raw = blst_p2::default();
-        raw.x = x.0;
-        raw.y = y.0;
-        raw.z = z.0;
+        let raw = blst_p2 { x: x.0, y: y.0, z: z.0 };
 
         G2Projective(raw)
     }

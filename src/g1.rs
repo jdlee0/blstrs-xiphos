@@ -275,11 +275,13 @@ impl G1Affine {
         unsafe { blst_p1_affine_on_curve(&self.0) }
     }
 
-    pub fn from_raw_unchecked(x: Fp, y: Fp, _infinity: bool) -> Self {
-        let mut raw = blst_p1_affine::default();
-        raw.x = x.0;
-        raw.y = y.0;
-        // FIXME: what about infinity?
+    pub fn from_raw_unchecked(x: Fp, y: Fp, infinity: bool) -> Self {
+        // blst stores points at infinity as (0,0) in affine coordinates.
+        let raw = if infinity {
+            blst_p1_affine::default()
+        } else {
+            blst_p1_affine {x: x.0, y: y.0}
+        };
 
         G1Affine(raw)
     }
@@ -567,10 +569,7 @@ impl G1Projective {
     }
 
     pub fn from_raw_unchecked(x: Fp, y: Fp, z: Fp) -> Self {
-        let mut raw = blst_p1::default();
-        raw.x = x.0;
-        raw.y = y.0;
-        raw.z = z.0;
+        let raw = blst_p1 { x: x.0, y: y.0, z: z.0 };
 
         G1Projective(raw)
     }
