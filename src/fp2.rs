@@ -138,6 +138,57 @@ impl Fp2 {
         Fp2(blst_fp2 { fp: [c0.0, c1.0] })
     }
 
+    /// Attempts to convert a little-endian byte representation of
+    /// a scalar into an `Fp2`, failing if the input is not canonical.
+    pub fn from_bytes_le(bytes: &[u8; 96]) -> Option<Fp2> {
+        use std::convert::TryInto;
+        let c0 = Fp::from_bytes_le(&bytes[0..48].try_into().ok()?)?;
+        let c1 = Fp::from_bytes_le(&bytes[48..96].try_into().ok()?)?;
+
+        Some(Fp2::new(c0, c1))
+    }
+
+    /// Attempts to convert a big-endian byte representation of
+    /// a scalar into an `Fp2`, failing if the input is not canonical.
+    pub fn from_bytes_be(bytes: &[u8; 96]) -> Option<Fp2> {
+        use std::convert::TryInto;
+        let c0 = Fp::from_bytes_be(&bytes[0..48].try_into().ok()?)?;
+        let c1 = Fp::from_bytes_be(&bytes[48..96].try_into().ok()?)?;
+
+        Some(Fp2::new(c0, c1))
+    }
+
+    /// Converts an element of `Fp2` into a byte representation in
+    /// little-endian byte order.
+    pub fn to_bytes_le(&self) -> [u8; 96] {
+        let mut out = [0u8; 96];
+
+        out[0..48].clone_from_slice(&self.c0().to_bytes_le());
+        out[48..96].clone_from_slice(&self.c1().to_bytes_le());
+
+        out
+    }
+
+    /// Converts an element of `Fp2` into a byte representation in
+    /// big-endian byte order.
+    pub fn to_bytes_be(&self) -> [u8; 96] {
+        let mut out = [0u8; 96];
+
+        out[0..48].clone_from_slice(&self.c0().to_bytes_be());
+        out[48..96].clone_from_slice(&self.c1().to_bytes_be());
+
+        out
+    }
+
+    /// Constructs an element of `Fp2` without checking that it is canonical.
+    pub fn from_raw_unchecked(v: [u64; 12]) -> Fp2 {
+        use std::convert::TryInto;
+        let c0 = Fp::from_raw_unchecked(v[0..6].try_into().unwrap());
+        let c1 = Fp::from_raw_unchecked(v[6..12].try_into().unwrap());
+
+        Fp2::new(c0, c1)
+    }
+
     #[inline]
     pub fn add(&self, rhs: &Fp2) -> Fp2 {
         let mut out = blst_fp2::default();

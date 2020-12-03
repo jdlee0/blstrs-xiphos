@@ -119,6 +119,57 @@ impl Fp12 {
         Fp12(blst_fp12 { fp6: [c0.0, c1.0] })
     }
 
+    /// Attempts to convert a little-endian byte representation of
+    /// a scalar into an `Fp12`, failing if the input is not canonical.
+    pub fn from_bytes_le(bytes: &[u8; 576]) -> Option<Fp12> {
+        use std::convert::TryInto;
+        let c0 = Fp6::from_bytes_le(&bytes[0..288].try_into().ok()?)?;
+        let c1 = Fp6::from_bytes_le(&bytes[228..576].try_into().ok()?)?;
+
+        Some(Fp12::new(c0, c1))
+    }
+
+    /// Attempts to convert a big-endian byte representation of
+    /// a scalar into an `Fp12`, failing if the input is not canonical.
+    pub fn from_bytes_be(bytes: &[u8; 576]) -> Option<Fp12> {
+        use std::convert::TryInto;
+        let c0 = Fp6::from_bytes_be(&bytes[0..288].try_into().ok()?)?;
+        let c1 = Fp6::from_bytes_be(&bytes[288..576].try_into().ok()?)?;
+
+        Some(Fp12::new(c0, c1))
+    }
+
+    /// Converts an element of `Fp12` into a byte representation in
+    /// little-endian byte order.
+    pub fn to_bytes_le(&self) -> [u8; 576] {
+        let mut out = [0u8; 576];
+
+        out[0..288].clone_from_slice(&self.c0().to_bytes_le());
+        out[288..576].clone_from_slice(&self.c1().to_bytes_le());
+
+        out
+    }
+
+    /// Converts an element of `Fp12` into a byte representation in
+    /// big-endian byte order.
+    pub fn to_bytes_be(&self) -> [u8; 576] {
+        let mut out = [0u8; 576];
+
+        out[0..288].clone_from_slice(&self.c0().to_bytes_be());
+        out[288..576].clone_from_slice(&self.c1().to_bytes_be());
+
+        out
+    }
+
+    /// Constructs an element of `Fp12` without checking that it is canonical.
+    pub fn from_raw_unchecked(v: [u64; 72]) -> Fp12 {
+        use std::convert::TryInto;
+        let c0 = Fp6::from_raw_unchecked(v[0..36].try_into().unwrap());
+        let c1 = Fp6::from_raw_unchecked(v[36..72].try_into().unwrap());
+
+        Fp12::new(c0, c1)
+    }
+
     #[inline]
     pub fn add(&self, rhs: &Fp12) -> Fp12 {
         let c0 = (self.c0() + rhs.c0()).0;

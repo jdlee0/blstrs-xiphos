@@ -140,6 +140,62 @@ impl Fp6 {
         })
     }
 
+    /// Attempts to convert a little-endian byte representation of
+    /// a scalar into an `Fp6`, failing if the input is not canonical.
+    pub fn from_bytes_le(bytes: &[u8; 288]) -> Option<Fp6> {
+        use std::convert::TryInto;
+        let c0 = Fp2::from_bytes_le(&bytes[0..96].try_into().ok()?)?;
+        let c1 = Fp2::from_bytes_le(&bytes[96..192].try_into().ok()?)?;
+        let c2 = Fp2::from_bytes_le(&bytes[192..288].try_into().ok()?)?;
+
+        Some(Fp6::new(c0, c1, c2))
+    }
+
+    /// Attempts to convert a big-endian byte representation of
+    /// a scalar into an `Fp6`, failing if the input is not canonical.
+    pub fn from_bytes_be(bytes: &[u8; 288]) -> Option<Fp6> {
+        use std::convert::TryInto;
+        let c0 = Fp2::from_bytes_be(&bytes[0..96].try_into().ok()?)?;
+        let c1 = Fp2::from_bytes_be(&bytes[96..192].try_into().ok()?)?;
+        let c2 = Fp2::from_bytes_be(&bytes[192..288].try_into().ok()?)?;
+
+        Some(Fp6::new(c0, c1, c2))
+    }
+
+    /// Converts an element of `Fp6` into a byte representation in
+    /// little-endian byte order.
+    pub fn to_bytes_le(&self) -> [u8; 288] {
+        let mut out = [0u8; 288];
+
+        out[0..96].clone_from_slice(&self.c0().to_bytes_le());
+        out[96..192].clone_from_slice(&self.c1().to_bytes_le());
+        out[192..288].clone_from_slice(&self.c1().to_bytes_le());
+
+        out
+    }
+
+    /// Converts an element of `Fp6` into a byte representation in
+    /// big-endian byte order.
+    pub fn to_bytes_be(&self) -> [u8; 288] {
+        let mut out = [0u8; 288];
+
+        out[0..96].clone_from_slice(&self.c0().to_bytes_be());
+        out[96..192].clone_from_slice(&self.c1().to_bytes_be());
+        out[192..288].clone_from_slice(&self.c1().to_bytes_be());
+
+        out
+    }
+
+    /// Constructs an element of `Fp6` without checking that it is canonical.
+    pub fn from_raw_unchecked(v: [u64; 36]) -> Fp6 {
+        use std::convert::TryInto;
+        let c0 = Fp2::from_raw_unchecked(v[0..12].try_into().unwrap());
+        let c1 = Fp2::from_raw_unchecked(v[12..24].try_into().unwrap());
+        let c2 = Fp2::from_raw_unchecked(v[24..36].try_into().unwrap());
+
+        Fp6::new(c0, c1, c2)
+    }
+
     #[inline]
     pub fn add(&self, rhs: &Fp6) -> Fp6 {
         let c0 = (self.c0() + rhs.c0()).0;
