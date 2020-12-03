@@ -935,6 +935,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::eq_op)]
     fn test_affine_point_equality() {
         let a = G1Affine::one();
         let b = G1Affine::zero();
@@ -946,6 +947,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::eq_op)]
     fn test_projective_point_equality() {
         let a = G1Projective::one();
         let b = G1Projective::zero();
@@ -964,7 +966,7 @@ mod tests {
             0x12b108ac33643c3e,
         ]);
 
-        let mut z2 = z.clone();
+        let mut z2 = z;
         z2.square();
         let mut c = G1Projective::from_raw_unchecked(a.x() * z2, a.y() * (z2 * z), z);
         assert!(c.is_on_curve());
@@ -1088,7 +1090,7 @@ mod tests {
                     0x12b108ac33643c3e,
                 ]);
 
-                let mut z2 = z.clone();
+                let mut z2 = z;
                 z2.square();
                 b = G1Projective::from_raw_unchecked(b.x() * (z2), b.y() * (z2 * z), z);
             }
@@ -1237,6 +1239,7 @@ mod tests {
             assert!(c.is_on_curve());
             assert!(c == G1Projective::one());
         }
+        #[allow(clippy::assign_op_pattern)]
         {
             let mut a = G1Projective::one();
             a.double();
@@ -1304,6 +1307,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::eq_op)]
     fn test_projective_negation_and_subtraction() {
         let mut a = G1Projective::one();
         a.double();

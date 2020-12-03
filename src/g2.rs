@@ -1232,6 +1232,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::eq_op)]
     fn test_affine_point_equality() {
         let a = G2Affine::one();
         let b = G2Affine::zero();
@@ -1243,6 +1244,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::eq_op)]
     fn test_projective_point_equality() {
         let a = G2Projective::one();
         let b = G2Projective::zero();
