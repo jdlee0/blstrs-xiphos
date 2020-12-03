@@ -699,8 +699,22 @@ impl groupy::CurveProjective for G1Projective {
         ret
     }
 
-    fn hash(_msg: &[u8]) -> Self {
-        unimplemented!("not supported");
+    fn hash(msg: &[u8]) -> Self {
+        let mut out = blst_p1::default();
+
+        unsafe {
+            blst_hash_to_g1(
+                &mut out,
+                msg.as_ptr(),
+                msg.len(),
+                std::ptr::null(),
+                0,
+                std::ptr::null(),
+                0,
+            )
+        };
+
+        G1Projective(out)
     }
 }
 
