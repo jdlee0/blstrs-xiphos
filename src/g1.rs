@@ -636,13 +636,55 @@ impl groupy::CurveProjective for G1Projective {
     }
 
     fn batch_normalization<S: std::borrow::BorrowMut<Self>>(v: &mut [S]) {
-        for el in v {
-            let el = el.borrow_mut();
-            let mut tmp = blst_p1_affine::default();
+        // Simultaneously invert a vector of _non-zero_ elements of Fp using
+        // Montgomery's inversion trick
+        fn batch_inverse(inputs: &mut [Fp]) {
+            let mut scratch = vec![Fp::zero(); inputs.len()];
+            let mut acc = Fp::one();
 
-            unsafe {
-                blst_p1_to_affine(&mut tmp, &el.0);
-                blst_p1_from_affine(&mut el.0, &tmp);
+            for (input, scratch) in inputs.iter().zip(scratch.iter_mut()) {
+                *scratch = acc;
+                acc *= input;
+            }
+
+            acc = acc.inverse().unwrap();
+
+            for (input, scratch) in inputs.iter_mut().rev().zip(scratch.iter().rev()) {
+                let tmp = acc * *input;
+                *input = acc * scratch;
+                acc = tmp;
+            }
+        }
+
+        // Extract z coordinates that are not 0 or 1
+        let mut z_vec: Vec<Fp> = v
+            .iter_mut()
+            .map(|p| *p.borrow_mut())
+            .filter(|p| (!p.is_normalized()) && !p.is_zero())
+            .map(|p| p.z())
+            .collect();
+
+        // Invert the gathered z-coordinates in place
+        batch_inverse(&mut z_vec);
+
+        let mut idx = 0;
+
+        for el in v.iter_mut() {
+            let point = el.borrow_mut();
+            if point.is_zero() {
+                // Normalize points at infinity.
+                *point = G1Projective::zero();
+            } else if !point.is_normalized() {
+                let mut tmp = z_vec[idx];
+
+                tmp.square();
+                point.0.x = (point.x() * tmp).0;
+
+                tmp *= z_vec[idx];
+                point.0.y = (point.y() * tmp).0;
+
+                point.0.z = Fp::one().0;
+                idx += 1;
             }
         }
     }
